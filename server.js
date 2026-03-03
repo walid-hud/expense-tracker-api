@@ -1,5 +1,6 @@
 import express from 'express';
 import router from './src/routes/Transactions.js';
+import { connectDB } from './src/db/connect.js';
 
 
 
@@ -20,6 +21,7 @@ server.use((req,res)=>{
 
 
 
-server.listen("3000" , (e)=>{
+server.listen("3000" , async (e)=>{
+    await connectDB()
     console.log("server running on http://localhost:3000")
 })
