@@ -1,5 +1,7 @@
 import express from "express"
-import { GetStats, GetTransactions, PostTransaction } from "../controllers/Transactions.js"
+import { GetStats} from "../controllers/transactions/getStart_transactions.js"
+import {GetTransactions} from "../controllers/transactions/get_transactions.js"
+import {PostTransaction} from "../controllers/transactions/post_transactions.js"
 const router = express.Router()
 
 
