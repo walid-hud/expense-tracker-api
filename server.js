@@ -1,27 +1,28 @@
-import express from 'express';
-import router from './src/routes/Transactions.js';
-import { connectDB } from './src/db/connect.js';
+import express from "express";
+import router from "./src/routes/Transactions.js";
+import { connectDB } from "./src/db/connect.js";
+import Transaction from "./src/models/Transaction.js";
 
+const server = express();
 
+server.get("/health", async (_, res) => {
+    const transaction = await Transaction.insertOne({
+        title: "test",
+        amount: 100,
+        transactionType: "expense",
+        category: "test",
+        date: Date.now(),
+    });
+    res.json({ success: true, transaction });
+});
 
-const server = express()
+server.use("/transactions", router);
 
-server.get("/health" , (_ , res)=>{
-    res.json({success:true})
-})
+server.use((req, res) => {
+    res.status(404).json({ error: "not found" });
+});
 
-server.use("/transactions", router)
-
-
-server.use((req,res)=>{
-    res.status(404).json({error:"not found"})
-})
-
-
-
-
-
-server.listen("3000" , async (e)=>{
-    await connectDB()
-    console.log("server running on http://localhost:3000")
-})
+server.listen("3000", async (e) => {
+    await connectDB();
+    console.log("server running on http://localhost:3000");
+});
