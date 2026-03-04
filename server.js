@@ -6,14 +6,7 @@ import Transaction from "./src/models/Transaction.js";
 const server = express();
 
 server.get("/health", async (_, res) => {
-    const transaction = await Transaction.insertOne({
-        title: "test",
-        amount: 100,
-        transactionType: "expense",
-        category: "test",
-        date: Date.now(),
-    });
-    res.json({ success: true, transaction });
+    res.json({ success: true});
 });
 
 server.use("/transactions", router);
