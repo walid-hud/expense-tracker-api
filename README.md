@@ -1,9 +1,8 @@
-# example server respons
-```json
+# example server response
+```ts
 {
-    "success":true,
-    "error":null,
-    "data":[]
+    success:boolean,
+    error:null | string ,
+    data:any
 }
-
 ```

@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev":"node --watch  --env-file=.env server.js"
+    "dev":"node --watch  --env-file=.env server.js",
+    "seed:mini": "node --env-file=.env src/testing/example.js"
   },
   "repository": {
     "type": "git",
