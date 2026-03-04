@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import mongoos from "mongoose";
+import {body,validationResult} from "express-validator";
 
 const TransactionSchema = mongoos.Schema(
     {
@@ -36,3 +37,7 @@ const TransactionSchema = mongoos.Schema(
  */
 const Transaction = mongoos.model("Transaction", TransactionSchema);
 export default Transaction;
+
+const validatorRoles =[
+    
+]

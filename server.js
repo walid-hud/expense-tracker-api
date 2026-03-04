@@ -4,7 +4,7 @@ import { connectDB } from "./src/db/connect.js";
 import Transaction from "./src/models/Transaction.js";
 
 const server = express();
-
+server.use(express.json());
 server.get("/health", async (_, res) => {
     res.json({ success: true});
 });
@@ -19,3 +19,4 @@ server.listen("3000", async (e) => {
     await connectDB();
     console.log("server running on http://localhost:3000");
 });
+
