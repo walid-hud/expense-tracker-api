@@ -1,7 +1,6 @@
+// @ts-check
 import mongoose from "mongoose";
-import mongoos from "mongoose";
-
-const TransactionSchema = mongoos.Schema(
+const TransactionSchema = new mongoose.Schema(
     {
         title: {
             type: String,
@@ -32,7 +31,9 @@ const TransactionSchema = mongoos.Schema(
 );
 
 /**
- * @type {mongoos.Model} Transactions
+ * @typedef {mongoose.InferSchemaType<typeof TransactionSchema>} TransactionDoc
  */
-const Transaction = mongoos.model("Transaction", TransactionSchema);
+
+/** @type {mongoose.Model<TransactionDoc>} */
+const Transaction = mongoose.model("Transaction", TransactionSchema);
 export default Transaction;
