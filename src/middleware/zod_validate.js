@@ -11,8 +11,12 @@ export function zodValidate(schema) {
         const validationResult = schema.safeParse(req.query);
         if (!validationResult.success) {
             return res.status(400).json({
-                error: 'invalid request',
-                details: z.treeifyError(validationResult.error),
+                success: false,
+                errors: validationResult.error.issues.map((issue) => ({
+                    path: issue.path.join('.'),
+                    message: issue.message,
+                    code: issue.code,
+                }))
             });
         }
         /*
@@ -20,7 +24,7 @@ export function zodValidate(schema) {
         returns a new object every time, so we can't just assign the
         validated data to it, we have to redefine the property with the validated data
         */
-       Object.defineProperty(req, 'query', {
+        Object.defineProperty(req, 'query', {
             value: validationResult.data,
             configurable: true,
             enumerable: true,

@@ -2,7 +2,7 @@
 ```ts
 {
     success:boolean,
-    error:null | string ,
-    data:any
+    errors:null | string ,
+    data:{any: any} | null,
 }
 ```
