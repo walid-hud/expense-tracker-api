@@ -1,7 +1,6 @@
 import express from "express";
 import router from "./src/routes/Transactions.js";
 import { connectDB } from "./src/db/connect.js";
-import Transaction from "./src/models/Transaction.js";
 
 const server = express();
 server.use(express.json());

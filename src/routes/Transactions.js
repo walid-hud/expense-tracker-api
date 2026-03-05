@@ -14,11 +14,16 @@ export const GetTransactionsParamsSchema = z
         createdFrom: z.coerce.date().optional(),
         createdTo: z.coerce.date().optional(),
         category: z.string().optional(),
-        transactionType: z.enum(["income", "expense"]).optional(),
+        type: z.enum(["income", "expense"]).optional(),
         /* example request query: 
         transactions?page=1&limit=10&date=2024-01-01&createdFrom=2024-01-01&createdTo=2024-12-31&category=food&type=expense
         */
     })
+    /* 
+    we want to make sure that the user doesn't specify 
+    both date and createdFrom/createdTo, because that would be ambiguous, 
+    so we add a refinement to the schema to check for that
+    */
     .refine((data) => {
         if (data.date && (data.createdFrom || data.createdTo)) {
             return false;
