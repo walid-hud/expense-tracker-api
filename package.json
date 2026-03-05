@@ -1,27 +1,28 @@
 {
-  "name": "expense-tracker-api",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "dev": "node --watch  --env-file=.env server.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/walid-hud/expense-tracker-api.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
-  "bugs": {
-    "url": "https://github.com/walid-hud/expense-tracker-api/issues"
-  },
-  "homepage": "https://github.com/walid-hud/expense-tracker-api#readme",
-  "dependencies": {
-    "express": "^5.2.1",
-    "express-validator": "^7.3.1",
-    "mongoose": "^9.2.3",
-    "zod": "^4.3.6"
-  }
+    "name": "expense-tracker-api",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "dev": "node --watch  --env-file=.env server.js",
+        "seed:mini": "node --env-file=.env src/testing/example.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/walid-hud/expense-tracker-api.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "type": "module",
+    "bugs": {
+        "url": "https://github.com/walid-hud/expense-tracker-api/issues"
+    },
+    "homepage": "https://github.com/walid-hud/expense-tracker-api#readme",
+    "dependencies": {
+        "express": "^5.2.1",
+        "express-validator": "^7.3.1",
+        "mongoose": "^9.2.3",
+        "zod": "^4.3.6"
+    }
 }
