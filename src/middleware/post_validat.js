@@ -1,4 +1,5 @@
 import { body, validationResult } from "express-validator";
+import { success } from "zod";
 
 export const validatorRoles = [
     body("title").notEmpty().withMessage("title is required"),
@@ -24,7 +25,7 @@ export const validatorRoles = [
     const validation = validationResult(req);
 
     if (!validation.isEmpty()) {
-        return res.status(400).json({ errors: validation.errors });
+        return res.status(400).json({ errors: validation.errors ,success:false });
     }
     next();
 }

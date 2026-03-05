@@ -5,6 +5,7 @@ import { PostTransaction } from "../controllers/transactions/post_transactions.j
 import z from "zod";
 import { zodValidate } from "../middleware/zod_validate.js";
 import { validatorRoles, validator } from "../middleware/post_validat.js";
+import { validatExpense, validatorEx,  } from "../middleware/validat_Expense.js";
 const router = express.Router();
 
 export const GetTransactionsParamsSchema = z
@@ -38,7 +39,7 @@ export const GetTransactionsParamsSchema = z
     );
 
 router.get("/", zodValidate(GetTransactionsParamsSchema), GetTransactions);
-router.post("/", validatorRoles, validator, PostTransaction);
+router.post("/", validatorRoles, validator,validatExpense, validatorEx, PostTransaction);
 router.get("/stats", GetStats);
 
 export default router;
