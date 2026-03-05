@@ -4,6 +4,7 @@ import { GetTransactions } from "../controllers/transactions/get_transactions.js
 import { PostTransaction } from "../controllers/transactions/post_transactions.js";
 import z from "zod";
 import { zodValidate } from "../middleware/zod_validate.js";
+import { validatorRoles, validator } from "../middleware/post_validat.js";
 const router = express.Router();
 
 export const GetTransactionsParamsSchema = z
@@ -24,18 +25,20 @@ export const GetTransactionsParamsSchema = z
     both date and createdFrom/createdTo, because that would be ambiguous, 
     so we add a refinement to the schema to check for that
     */
-    .refine((data) => {
-        if (data.date && (data.createdFrom || data.createdTo)) {
-            return false;
-        }
-        return true;
-    }, 
-    {
-        message: "either specify date or createdFrom/createdTo, not both",
-    });
+    .refine(
+        (data) => {
+            if (data.date && (data.createdFrom || data.createdTo)) {
+                return false;
+            }
+            return true;
+        },
+        {
+            message: "either specify date or createdFrom/createdTo, not both",
+        },
+    );
 
 router.get("/", zodValidate(GetTransactionsParamsSchema), GetTransactions);
-router.post("/", PostTransaction);
+router.post("/", validatorRoles, validator, PostTransaction);
 router.get("/stats", GetStats);
 
 export default router;
