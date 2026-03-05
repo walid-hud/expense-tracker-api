@@ -50,7 +50,12 @@ async function getTransactionData(query, options) {
 // this function builds the query and options for the getTransactionData function based on the provided parameters
 function buildTransactionQueryAndOptions(params) {
 	const query = {};
-	const options = {};
+	const options = { lean: true };
+	/* we use lean queries to get plain javascript objects instead of mongoose documents,
+	this improves performance and reduces memory usage, 
+	but we lose the mongoose document methods like save() and remove(),
+	but we don't need them for now
+	*/
 	if (params.page) {
 		options.skip = (params.page - 1) * params.limit;
 	}
@@ -78,11 +83,11 @@ function buildTransactionQueryAndOptions(params) {
 	if (params.category) {
 		query.category = params.category;
 	}
-	if (params.type === "income" || params.type === "expense") {
+	if (params.type) {
 		query.transactionType = params.type;
 	}
 
 
-	
+
 	return { query, options };
 }
