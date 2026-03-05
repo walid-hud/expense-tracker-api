@@ -5,7 +5,7 @@ import { PostTransaction } from "../controllers/transactions/post_transactions.j
 import z from "zod";
 import { zodValidate } from "../middleware/zod_validate.js";
 import { validatorRoles, validator } from "../middleware/post_validat.js";
-import { validatExpense, validatorEx,  } from "../middleware/validat_Expense.js";
+import { validatExpense, validatorEx, } from "../middleware/validat_Expense.js";
 const router = express.Router();
 
 export const GetTransactionsParamsSchema = z
@@ -39,7 +39,19 @@ export const GetTransactionsParamsSchema = z
     );
 
 router.get("/", zodValidate(GetTransactionsParamsSchema), GetTransactions);
-router.post("/", validatorRoles, validator,validatExpense, validatorEx, PostTransaction);
-router.get("/stats", GetStats);
+router.post("/", validatorRoles, validator, validatExpense, validatorEx, PostTransaction);
+
+
+const getTransactionsStatsSchema = z.object({
+    month: z.coerce.number().min(0).max(11).optional(),
+    year: z.coerce.number().min(1900).max(new Date().getFullYear()).optional(),
+    category: z.string().nonempty().optional()
+}).refine((data) => {
+    if (data.month && !data.year) return false
+    return true
+},
+    { message: "can't specify a month field without a year" }
+)
+router.get("/stats", zodValidate(getTransactionsStatsSchema) , GetStats);
 
 export default router;
