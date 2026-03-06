@@ -30,7 +30,7 @@ export async function GetTransactions(req, res) {
 	result.success = true;
 	result.data = data;
 	res.json(result);
-	
+
 }
 
 /**

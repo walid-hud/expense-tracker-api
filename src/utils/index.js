@@ -1,102 +1,98 @@
 import Transaction from "../models/Transaction.js";
 import mongoose from "mongoose";
 /**
- * @param {import("../controllers/transactions/get_transactions").TransactionQuery} query
- * @param {import("../controllers/transactions/get_transactions").TransactionQueryOptions} options
+ * @param {Date} from
+ * @param {Date} to
  */
-export async function getStats(query , options){
+export async function getStats(from, to) {
     /** @type {mongoose.PipelineStage[]} */
+
     const pipeline = [
-      { $match: query },
-
-      // keep only needed fields
-      { $project: { amount: 1, transactionType: 1, category: 1 } },
-
-      // compute three parallel summaries
-      { $facet: {
-          totalsByType: [
-            { $group: {
-                _id: "$transactionType",
-                total: { $sum: "$amount" },
-                count: { $sum: 1 }
-            }},
-            { $project: { transactionType: "$_id", total: 1, count: 1, _id: 0 } }
-          ],
-          // single doc with income and expense sums
-          balanceCalc: [
-            { $group: {
-                _id: null,
-                income: {
-                  $sum: { $cond: [{ $eq: ["$transactionType", "income"] }, "$amount", 0] }
+        // 1) your existing month-level grouping (produces one doc for the month)
+        { $match: { date: { $gte: from, $lt: to } } },
+        {
+            $group: {
+                _id: { $dateTrunc: { date: "$date", unit: "month" } },
+                totalExpenseByCategory: {
+                    $push: {
+                        $cond: [
+                            { $eq: ["$transactionType", "expense"] },
+                            { category: "$category", amount: "$amount" },
+                            "$$REMOVE"
+                        ]
+                    }
                 },
-                expense: {
-                  $sum: { $cond: [{ $eq: ["$transactionType", "expense"] }, "$amount", 0] }
+                totalIncome: {
+                    $sum: { $cond: [{ $eq: ["$transactionType", "income"] }, "$amount", 0] }
+                },
+                totalExpenses: {
+                    $sum: { $cond: [{ $eq: ["$transactionType", "expense"] }, "$amount", 0] }
                 }
-            }},
-            { $project: { _id: 0, income: 1, expense: 1, balance: { $subtract: ["$income", "$expense"] } } }
-          ],
-          // expense totals per category
-          expenseByCategory: [
-            { $match: { transactionType: "expense" } },
-            { $group: { _id: "$category", totalExpense: { $sum: "$amount" }, count: { $sum: 1 } } },
-            { $sort: { totalExpense: -1 } },
-            { $project: { category: "$_id", totalExpense: 1, count: 1, _id: 0 } }
-          ]
-      }},
-
-      // reshape and compute percent per category safely (avoid divide-by-zero)
-      { $addFields: {
-          balanceObj: { $arrayElemAt: ["$balanceCalc", 0] },
-          totalsByType: "$totalsByType",
-          expenseByCategory: "$expenseByCategory"
-      }},
-
-      // extract numeric totals for convenience
-      { $addFields: {
-          incomeTotal: { $ifNull: ["$balanceObj.income", 0] },
-          expenseTotal: { $ifNull: ["$balanceObj.expense", 0] },
-          balance: { $ifNull: ["$balanceObj.balance", { $subtract: [{ $ifNull: ["$balanceObj.income", 0] }, { $ifNull: ["$balanceObj.expense", 0] }] }] }
-      }},
-
-      // add percentOfExpenses to each category, rounded to 4 decimals
-      { $project: {
-          totalsByType: 1,
-          incomeTotal: 1,
-          expenseTotal: 1,
-          balance: 1,
-          expenseByCategory: {
-            $map: {
-              input: "$expenseByCategory",
-              as: "c",
-              in: {
-                category: "$$c.category",
-                totalExpense: "$$c.totalExpense",
-                count: "$$c.count",
-                percentOfExpenses: {
-                  $cond: [
-                    { $gt: ["$expenseTotal", 0] },
-                    { $round: [
-                        { $multiply: [
-                          { $divide: ["$$c.totalExpense", "$expenseTotal"] },
-                          100
-                        ] },
-                        4
-                      ]
-                    },
-                    0
-                  ]
-                }
-              }
             }
-          }
-      }}
+        },
+
+        // 2) unwind the per-item array into documents (preserve months with no expenses)
+        { $unwind: { path: "$totalExpenseByCategory", preserveNullAndEmptyArrays: true } },
+
+        // 3) group by category to sum amounts (no month key needed because single-month doc)
+        {
+            $group: {
+                _id: "$totalExpenseByCategory.category",
+                totalExpense: { $sum: "$totalExpenseByCategory.amount" },
+                // carry forward month totals from the parent doc
+                totalExpenses: { $first: "$totalExpenses" },
+                totalIncome: { $first: "$totalIncome" },
+                monthId: { $first: "$_id" }
+            }
+        },
+
+        // 4) assemble categories array and keep totals (if category is null, you can filter it out)
+        {
+            $group: {
+                _id: "$monthId",
+                expenseByCategory: {
+                    $push: {
+                        category: "$_id",
+                        totalExpense: "$totalExpense"
+                    }
+                },
+                totalExpenses: { $first: "$totalExpenses" },
+                totalIncome: { $first: "$totalIncome" }
+            }
+        },
+
+        // 5) final projection: compute percentOfExpenses per category and final shape
+        {
+            $project: {
+                _id: 0,
+                year: { $year: "$_id" },
+                month: { $month: "$_id" },
+                totalIncome: "$totalIncome",
+                totalExpenses: "$totalExpenses",
+                balance: { $subtract: ["$totalIncome", "$totalExpenses"] },
+                expenseByCategory: {
+                    $map: {
+                        input: { $ifNull: ["$expenseByCategory", []] },
+                        as: "c",
+                        in: {
+                            category: "$$c.category",
+                            totalExpense: "$$c.totalExpense",
+                            percentOfExpenses: {
+                                $cond: [
+                                    { $gt: ["$totalExpenses", 0] },
+                                    { $round: [{ $multiply: [{ $divide: ["$$c.totalExpense", "$totalExpenses"] }, 100] }, 2] },
+                                    0
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        }
     ];
-    const testPipeline = [
-      { $match: query }
-    ]
-    const stats = await Transaction.aggregate(testPipeline).exec()
-    // console.log("computed stats:", JSON.stringify(stats, null, 2))
-    if(stats.length === 0) return {success:false,error:"no statistics available for this query"}
-    return {success:true, data:stats}
+
+
+    const stats = await Transaction.aggregate(pipeline).exec()
+    return { success: true, data: stats }
 }
 

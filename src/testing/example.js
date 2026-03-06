@@ -2,7 +2,7 @@ import { connectDB } from "../db/connect.js";
 import Transaction from "../models/Transaction.js";
 import mongoose from "mongoose";
 import { pathToFileURL } from "node:url";
-// this is AI generated code to seed the database with random transactions
+
 const EXPENSE_CATEGORIES = [
 	"food",
 	"transport",
@@ -29,6 +29,13 @@ const EXPENSE_TITLES = [
 
 const INCOME_TITLES = ["Salary", "Freelance Payment", "Bonus", "Gift", "Refund", "Investment Return"];
 
+const MIN_COUNT = 100;
+const MAX_COUNT = 300;
+const MIN_EXPENSE = 5;
+const MAX_EXPENSE = 500;
+const MIN_INCOME = 100;
+const MAX_INCOME = 5000;
+
 /**
  * @param {number} min
  * @param {number} max
@@ -54,20 +61,83 @@ function pickOne(items) {
 	return items[randomInt(0, items.length - 1)];
 }
 
-function buildRandomTransaction() {
-	const transactionType = Math.random() < 0.75 ? "expense" : "income";
-	const isExpense = transactionType === "expense";
-
-	const amount = isExpense ? randomInt(5, 500) : randomInt(100, 5000);
-	const title = isExpense ? pickOne(EXPENSE_TITLES) : pickOne(INCOME_TITLES);
-
+function buildIncomeTransaction() {
 	return {
-		title,
-		amount,
-		transactionType,
-		category: isExpense ? pickOne(EXPENSE_CATEGORIES) : undefined,
+		title: pickOne(INCOME_TITLES),
+		amount: randomInt(MIN_INCOME, MAX_INCOME),
+		transactionType: "income",
 		date: randomDate(new Date("2025-01-01"), new Date()),
 	};
+}
+
+/**
+ * @param {number} availableBalance
+ */
+function buildExpenseTransaction(availableBalance) {
+	const maxAllowed = Math.min(MAX_EXPENSE, Math.floor(availableBalance));
+	if (maxAllowed < MIN_EXPENSE) {
+		return null;
+	}
+
+	return {
+		title: pickOne(EXPENSE_TITLES),
+		amount: randomInt(MIN_EXPENSE, maxAllowed),
+		transactionType: "expense",
+		category: pickOne(EXPENSE_CATEGORIES),
+		date: randomDate(new Date("2025-01-01"), new Date()),
+	};
+}
+
+async function getCurrentTotals() {
+	const [summary] = await Transaction.aggregate([
+		{
+			$group: {
+				_id: null,
+				incomeTotal: {
+					$sum: {
+						$cond: [{ $eq: ["$transactionType", "income"] }, "$amount", 0],
+					},
+				},
+				expenseTotal: {
+					$sum: {
+						$cond: [{ $eq: ["$transactionType", "expense"] }, "$amount", 0],
+					},
+				},
+			},
+		},
+	]);
+
+	return {
+		incomeTotal: summary?.incomeTotal ?? 0,
+		expenseTotal: summary?.expenseTotal ?? 0,
+	};
+}
+
+/**
+ * Keep a running balance so generated expenses never push expenses above income.
+ * @param {number} count
+ * @param {number} startingBalance
+ */
+function buildBalancedTransactions(count, startingBalance) {
+	const docs = [];
+	let balance = startingBalance;
+
+	for (let index = 0; index < count; index += 1) {
+		const preferExpense = Math.random() < 0.7;
+		const expenseCandidate = preferExpense ? buildExpenseTransaction(balance) : null;
+
+		if (expenseCandidate) {
+			docs.push(expenseCandidate);
+			balance -= expenseCandidate.amount;
+			continue;
+		}
+
+		const income = buildIncomeTransaction();
+		docs.push(income);
+		balance += income.amount;
+	}
+
+	return docs;
 }
 
 /**
@@ -77,16 +147,21 @@ function buildRandomTransaction() {
 export async function seedMiniTransactions(count) {
 	const finalCount = Number.isInteger(count) ? count : randomInt(100, 300);
 
-	if (finalCount < 100 || finalCount > 300) {
+	if (finalCount < MIN_COUNT || finalCount > MAX_COUNT) {
 		throw new Error("count must be between 100 and 300");
 	}
 
 	await connectDB();
 
 	try {
-		const docs = Array.from({ length: finalCount }, () => buildRandomTransaction());
+		const { incomeTotal, expenseTotal } = await getCurrentTotals();
+		const startingBalance = incomeTotal - expenseTotal;
+		const docs = buildBalancedTransactions(finalCount, startingBalance);
+
+		docs.sort((left, right) => left.date.getTime() - right.date.getTime());
+
 		const inserted = await Transaction.insertMany(docs);
-		console.log(`Inserted ${inserted.length} transactions`);
+		console.log(`Inserted ${inserted.length} transactions with balance-aware generation`);
 		return inserted.length;
 	} finally {
 		await mongoose.connection.close();
