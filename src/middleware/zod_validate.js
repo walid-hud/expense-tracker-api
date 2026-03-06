@@ -7,7 +7,6 @@ import { z } from 'zod';
 */
 export function zodValidate(schema) {
     return (req, res, next) => {
-    console.log(req.query)
         const validationResult = schema.safeParse(req.query);
         if (!validationResult.success) {
             return res.status(400).json({
@@ -29,7 +28,6 @@ export function zodValidate(schema) {
             configurable: true,
             enumerable: true,
         });
-        console.log(req.query)
         next();
     }
 }

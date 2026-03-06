@@ -1,8 +1,9 @@
 import express from "express";
 import router from "./src/routes/Transactions.js";
 import { connectDB } from "./src/db/connect.js";
-
+import morgan from "morgan";
 const server = express();
+server.use(morgan("dev"));
 server.use(express.json());
 server.get("/health", async (_, res) => {
     res.json({ success: true});

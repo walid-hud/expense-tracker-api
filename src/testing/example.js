@@ -29,7 +29,7 @@ const EXPENSE_TITLES = [
 
 const INCOME_TITLES = ["Salary", "Freelance Payment", "Bonus", "Gift", "Refund", "Investment Return"];
 
-const MIN_COUNT = 100;
+const MIN_COUNT = 50;
 const MAX_COUNT = 300;
 const MIN_EXPENSE = 5;
 const MAX_EXPENSE = 500;
@@ -141,19 +141,20 @@ function buildBalancedTransactions(count, startingBalance) {
 }
 
 /**
- * Generates a mini transactions dataset (100-300 by default) and inserts it into DB.
+ * Generates a mini transactions dataset (50-300 by default) and inserts it into DB.
  * @param {number} [count]
  */
 export async function seedMiniTransactions(count) {
-	const finalCount = Number.isInteger(count) ? count : randomInt(100, 300);
+	const finalCount = Number.isInteger(count) ? count : randomInt(50, 300);
 
 	if (finalCount < MIN_COUNT || finalCount > MAX_COUNT) {
-		throw new Error("count must be between 100 and 300");
+		throw new Error("count must be between 50 and 300");
 	}
 
 	await connectDB();
 
 	try {
+		await Transaction.deleteMany({});
 		const { incomeTotal, expenseTotal } = await getCurrentTotals();
 		const startingBalance = incomeTotal - expenseTotal;
 		const docs = buildBalancedTransactions(finalCount, startingBalance);

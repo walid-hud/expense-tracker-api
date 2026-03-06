@@ -67,7 +67,7 @@ function buildTransactionQueryAndOptions(params) {
 	if (params.limit) {
 		options.limit = params.limit;
 	}
-	// date (this is a convoluted way to do it, but it works)
+	// Date filters should target the business transaction date field, not createdAt.
 	// senario A : exact date is provided
 	if (params.date) {
 		// we create a date range for the provided date (same day from 00:00:00 to 23:59:59)
@@ -75,15 +75,15 @@ function buildTransactionQueryAndOptions(params) {
 		startOfDay.setHours(0, 0, 0, 0);
 		const endOfDay = new Date(params.date);
 		endOfDay.setHours(23, 59, 59, 999);
-		query.createdAt = {};
-		query.createdAt.$gte = startOfDay;
-		query.createdAt.$lte = endOfDay;
+		query.date = {};
+		query.date.$gte = startOfDay;
+		query.date.$lte = endOfDay;
 	}
 	// senario B : date range is provided
 	else {
 		// pass the dates as they are, zod has already coerced them to dates, so we can use them directly
-		if (params.createdFrom) query.createdAt = { $gte: params.createdFrom };
-		if (params.createdTo) query.createdAt = { ...query.createdAt, $lte: params.createdTo };
+		if (params.createdFrom) query.date = { $gte: params.createdFrom };
+		if (params.createdTo) query.date = { ...query.date, $lte: params.createdTo };
 	}
 	if (params.category) {
 		query.category = params.category;
