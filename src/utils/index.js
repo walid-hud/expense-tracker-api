@@ -91,7 +91,6 @@ export async function getStats(query , options){
           }
       }}
     ];
-    console.log("stats query:", JSON.stringify(query, null, 2))
     const testPipeline = [
       { $match: query }
     ]

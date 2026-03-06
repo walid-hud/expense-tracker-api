@@ -13,7 +13,7 @@ export async function GetStats(req, res) {
     const statsQuery = {}
     const { query } = req
     const { month, year } = query
-    if (month && year) {
+    if (month != null && year != null) {
         const from = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0))
         const to = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0)) 
         statsQuery.date = {

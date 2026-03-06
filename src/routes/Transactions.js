@@ -42,10 +42,23 @@ router.get("/", zodValidate(GetTransactionsParamsSchema), GetTransactions);
 router.post("/", validatorRoles, validator, validatExpense, validatorEx, PostTransaction);
 
 
-const getTransactionsStatsSchema = z.object({
-    month: z.coerce.number().min(0).max(11).nonoptional(),
-    year: z.coerce.number().min(1900).max(new Date().getFullYear()).nonoptional(),
-}).strict()
-router.get("/stats", zodValidate(getTransactionsStatsSchema) , GetStats);
+const getTransactionsStatsSchema = z
+    .object({
+        // Keep empty query values (e.g. ?month=) from becoming 0 via coercion.
+        month: z.preprocess(
+            (value) => value === "" || value == null ? undefined : value,
+            z.coerce.number().int().min(1).max(12),
+        ),
+        year: z.preprocess(
+            (value) => value === "" || value == null ? undefined : value,
+            z.coerce.number().int().min(1900).max(new Date().getFullYear()),
+        ),
+    })
+    .strict()
+    .refine(
+        (data) => (data.month == null && data.year == null) || (data.month != null && data.year != null),
+        { message: "month and year must be provided together" },
+    )
+router.get("/stats", zodValidate(getTransactionsStatsSchema), GetStats);
 
 export default router;

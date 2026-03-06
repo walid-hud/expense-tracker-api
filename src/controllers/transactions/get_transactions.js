@@ -11,7 +11,6 @@ import Transaction from '../../models/Transaction.js';
  * 
  */
 export async function GetTransactions(req, res) {
-	console.log("GetTransactions called with query:", req.query);
 	const { options, query } = buildTransactionQueryAndOptions(req.query);
 	/**
 	 * @type {{success: boolean, data?: TransactionDoc[], error?: string}}
@@ -24,9 +23,14 @@ export async function GetTransactions(req, res) {
 		result.error = error;
 		return res.status(500).json(result);
 	}
+	if(!data || data.length === 0) {
+		result.error = "no transactions found for the provided query";
+		return res.status(404).json(result);
+	}
 	result.success = true;
 	result.data = data;
 	res.json(result);
+	
 }
 
 /**
