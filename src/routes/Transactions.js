@@ -43,15 +43,9 @@ router.post("/", validatorRoles, validator, validatExpense, validatorEx, PostTra
 
 
 const getTransactionsStatsSchema = z.object({
-    month: z.coerce.number().min(0).max(11).optional(),
-    year: z.coerce.number().min(1900).max(new Date().getFullYear()).optional(),
-    category: z.string().nonempty().optional()
-}).refine((data) => {
-    if (data.month && !data.year) return false
-    return true
-},
-    { message: "can't specify a month field without a year" }
-)
+    month: z.coerce.number().min(0).max(11).nonoptional(),
+    year: z.coerce.number().min(1900).max(new Date().getFullYear()).nonoptional(),
+}).strict()
 router.get("/stats", zodValidate(getTransactionsStatsSchema) , GetStats);
 
 export default router;
