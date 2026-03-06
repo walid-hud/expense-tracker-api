@@ -53,10 +53,11 @@ function buildTransactionQueryAndOptions(params) {
 	const options = { lean: true };
 	/* we use lean queries to get plain javascript objects instead of mongoose documents,
 	this improves performance and reduces memory usage, 
-	but we lose the mongoose document methods like save() and remove(),
-	but we don't need them for now
+	we lose the mongoose document methods like save() and remove(),
+	but we don't need them since we are only reading data, not modifying it.
 	*/
 	if (params.page) {
+		// standard pagination formula, skip = (page - 1) * limit
 		options.skip = (params.page - 1) * params.limit;
 	}
 	if (params.limit) {
