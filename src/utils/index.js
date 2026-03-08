@@ -43,7 +43,11 @@ export async function getStats(from, to) {
       },
     },
 
+<<<<<<< HEAD
     // 3) group by category to sum amounts (no month key needed because single-month doc)
+=======
+    // group by category to sum amounts (no month key needed because single-month doc)
+>>>>>>> 3328eba (clean up)
     {
       $group: {
         _id: "$totalExpenseByCategory.category",
@@ -55,7 +59,11 @@ export async function getStats(from, to) {
       },
     },
 
+<<<<<<< HEAD
     // 4) assemble categories array and keep totals (if category is null, you can filter it out)
+=======
+    // assemble categories array and keep totals (if category is null, you can filter it out)
+>>>>>>> 3328eba (clean up)
     {
       $group: {
         _id: "$monthId",
@@ -70,7 +78,11 @@ export async function getStats(from, to) {
       },
     },
 
+<<<<<<< HEAD
     // 5) final projection: compute percentOfExpenses per category and final shape
+=======
+    // final projection: compute percentOfExpenses per category and final shape
+>>>>>>> 3328eba (clean up)
     {
       $project: {
         _id: 0,
